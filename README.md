@@ -1,6 +1,6 @@
 # ai-hiring-suite
 
-
+This AI Hiring Suite is basically a full-stack, AI-driven, end-to-end recruitment automation platform with real-time interview capability, calendar scheduling, assessments, fairness checks, and a proper modern dev stack.
 
 ## Folder Structure
 
