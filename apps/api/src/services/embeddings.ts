@@ -1,42 +1,17 @@
-import { createICS } from './ics'
-import { sendMail } from './mailer'
+import cohere from 'cohere-ai'
 import logger from './logger'
 
-export async function sendCalendarInvite(evt: {
-  eventId?: string
-  title: string
-  description?: string
-  start: string
-  end: string
-  location?: string
-  attendees?: string[]
-  timezone?: string
-}) {
-  const ics = createICS({ ...evt, method: 'REQUEST' })
-  const to = evt.attendees || []
-  const subject = `Invite: ${evt.title}`
-  const html = `<p>You're invited: <strong>${evt.title}</strong></p><p>${evt.description || ''}</p>`
+const COHERE_KEY = process.env.COHERE_API_KEY || ''
+cohere.init(COHERE_KEY)
+
+export async function embed(texts: string[]): Promise<number[][]> {
+  if (!COHERE_KEY) throw new Error('COHERE_API_KEY not set')
   try {
-    await sendMail({ to, subject, html, text: `${evt.title}\n\n${evt.description || ''}` })
-    logger.info({ msg: 'calendar invite sent', title: evt.title, to })
-    // note: some mail clients want the ICS attached - nodemailer can attach as alternative if desired
-    return true
+    // model name may change; keep embed-english-v2 or v3 per cohere docs
+    const res = await cohere.embed({ model: 'embed-english-v2.0', texts })
+    return res.body.embeddings as number[][]
   } catch (e) {
-    logger.error({ msg: 'calendar invite failed', err: e })
+    logger.error({ msg: 'cohere embed failed', err: e })
     throw e
   }
-}
-
-export async function sendCalendarUpdate(evt: { eventId?: string; title: string; start: string; end: string; attendees?: string[]; reason?: string }) {
-  const ics = createICS({ ...evt, method: 'REQUEST' })
-  const subject = `Updated: ${evt.title}`
-  await sendMail({ to: evt.attendees || [], subject, html: `<p>Updated: ${evt.title}</p><p>Reason: ${evt.reason || ''}</p>` })
-  logger.info({ msg: 'calendar update sent', eventId: evt.eventId })
-}
-
-export async function sendCalendarCancel(evt: { eventId?: string; title: string; start?: string; end?: string; attendees?: string[]; reason?: string }) {
-  const ics = createICS({ ...evt, method: 'CANCEL' })
-  const subject = `Cancelled: ${evt.title}`
-  await sendMail({ to: evt.attendees || [], subject, html: `<p>Cancelled: ${evt.title}</p><p>Reason: ${evt.reason || ''}</p>` })
-  logger.info({ msg: 'calendar cancel sent', eventId: evt.eventId })
 }
