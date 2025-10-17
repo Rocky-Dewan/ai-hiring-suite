@@ -2,15 +2,20 @@ import Airtable from 'airtable'
 import { v4 as uuidv4 } from 'uuid'
 import logger from './logger'
 
-const API_KEY = process.env.AIRTABLE_API_KEY || ''
+const PAT = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN || ''
 const BASE_ID = process.env.AIRTABLE_BASE_ID || ''
 const JOBS_TABLE = process.env.AIRTABLE_TABLE_JOBS || 'Jobs'
 const APPLICANTS_TABLE = process.env.AIRTABLE_TABLE_APPLICANTS || 'Applicants'
-const CALENDAR_TABLE = process.env.AIRTABLE_TABLE_CALENDAR || 'Calendar'
-const ASSESSMENTS_TABLE = process.env.AIRTABLE_TABLE_ASSESSMENTS || 'Assessments'
+const CALENDAR_TABLE = process.env.AIRTABLE_TABLE_CALENDAR || 'Events'
+const ASSESSMENTS_TABLE = process.env.AIRTABLE_TABLE_ASSESSMENTS || 'Vectors'
 
-const base = new Airtable({ apiKey: API_KEY }).base(BASE_ID)
+if (!PAT) throw new Error('Airtable Personal Access Token (PAT) is missing')
 
+// Pass the PAT in the apiKey field (Airtable supports PAT here)
+const base = new Airtable({ apiKey: PAT }).base(BASE_ID)
+
+
+// --- rest of your functions stay the same ---
 export async function listJobs() {
   const out: any[] = []
   await base(JOBS_TABLE).select({ pageSize: 100 }).eachPage((records, next) => {
