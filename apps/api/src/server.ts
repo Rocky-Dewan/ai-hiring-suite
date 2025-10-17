@@ -1,6 +1,8 @@
+import dotenv from 'dotenv'
+import 'dotenv/config'
 import http from 'http'
 import app from './app'
-import dotenv from 'dotenv'
+
 import path from 'path'
 
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env') })
