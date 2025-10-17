@@ -13,14 +13,29 @@ router.post('/upload-audio', upload.single('file'), async (req, res, next) => {
   try {
     const file = req.file
     const { applicantId } = req.body
-    if (!file || !applicantId) return res.status(400).json({ error: 'missing file or applicantId' })
-    const url = await storageSvc.putBuffer(file.buffer, file.mimetype, `interviews/${applicantId}`)
+
+    if (!file || !applicantId)
+      return res.status(400).json({ error: 'missing file or applicantId' })
+
+    // upload file to storage
+    const url = await storageSvc.putBuffer(
+      file.buffer,
+      file.mimetype,
+      `interviews/${applicantId}`
+    )
+
     // transcribe with Whisper (service)
     const transcript = await sttSvc.transcribeWithWhisper(file.buffer, file.mimetype)
+
     // update applicant record with transcript
-    await airtableSvc.updateApplicant(applicantId, { transcript_text: transcript, transcript_url: url })
-    // optional: scoring pipeline (placeholder)
-    const score = await scoringSvc.evaluateTranscript(applicantId, transcript)
+    await airtableSvc.updateApplicant(applicantId, {
+      transcript_text: transcript,
+      transcript_url: url,
+    })
+
+    // evaluate transcript with Cohere rerank
+    const { score } = await scoringSvc.evaluateTranscript(applicantId, transcript)
+
     res.json({ audioUrl: url, transcript, score })
   } catch (e) {
     next(e)
@@ -31,8 +46,12 @@ router.post('/upload-audio', upload.single('file'), async (req, res, next) => {
 router.post('/finalize', async (req, res, next) => {
   try {
     const { applicantId, verdict } = req.body
-    if (!applicantId) return res.status(400).json({ error: 'missing applicantId' })
-    await airtableSvc.updateApplicant(applicantId, { status: verdict || 'interviewed' })
+    if (!applicantId)
+      return res.status(400).json({ error: 'missing applicantId' })
+
+    await airtableSvc.updateApplicant(applicantId, {
+      status: verdict || 'interviewed',
+    })
     res.json({ ok: true })
   } catch (e) {
     next(e)
