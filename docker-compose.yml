@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./apps/api
+    container_name: ai-hiring-backend
+    env_file: .env
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./apps/web
+    container_name: ai-hiring-frontend
+    env_file: .env
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:16
+    container_name: ai-hiring-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_hiring
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
