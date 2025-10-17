@@ -5,7 +5,7 @@ const upload = multer({ storage: multer.memoryStorage() })
 import * as parseSvc from '../services/parseResume'
 import * as storageSvc from '../services/storage'
 import * as airtableSvc from '../services/airtable'
-import * as matchingSvc from '../services/matching'
+import * as matchingSvc from '../routes/match'
 
 const router = Router()
 
