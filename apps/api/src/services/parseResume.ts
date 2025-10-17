@@ -1,4 +1,5 @@
-import pdf from 'pdf-parse'
+import * as pdf from 'pdf-parse'
+
 import mammoth from 'mammoth'
 import { Readable } from 'stream'
 import logger from './logger'
