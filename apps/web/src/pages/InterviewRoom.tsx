@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react'
 import BotBubble from '../components/BotBubble'
 import VideoRecorder from '../components/VideoRecorder'
@@ -7,7 +6,8 @@ import { apiBase } from '../lib/api'
 type Q = { id: string; text: string }
 type TranscriptResp = { audioUrl: string; transcript: string }
 
-const QUESTIONS: Q[] = [
+
+const QUESTIONS_LIST: Q[] = [
   { id: 'q1', text: 'Tell me about a challenging project you led.' },
   { id: 'q2', text: 'How do you handle tight deadlines and ambiguity?' },
   { id: 'q3', text: 'Describe a time you optimized performance significantly.' }
@@ -17,17 +17,17 @@ export default function InterviewRoom() {
   const [applicantId, setApplicantId] = useState('')
   const [index, setIndex] = useState(0)
   const [speaking, setSpeaking] = useState(false)
-  const [transcripts, setTranscripts] = useState < Record < string, string>> ({})
+  const [transcripts, setTranscripts] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
-  const mediaBlobRef = useRef < Blob | null > (null)
+  const mediaBlobRef = useRef<Blob | null>(null)
 
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('applicantId') || ''
     setApplicantId(id)
   }, [])
 
-  // Simple TTS using Web Speech API
+
   function speak(text: string) {
     if (!('speechSynthesis' in window)) return
     const u = new SpeechSynthesisUtterance(text)
@@ -37,7 +37,7 @@ export default function InterviewRoom() {
   }
 
   useEffect(() => {
-    if (QUESTIONS[index]) speak(QUESTIONS[index].text)
+    if (QUESTIONS_LIST[index]) speak(QUESTIONS_LIST[index].text)
   }, [index])
 
   async function handleUploadAudio(blob: Blob) {
@@ -50,12 +50,15 @@ export default function InterviewRoom() {
     try {
       const fd = new FormData()
       fd.append('applicantId', applicantId)
-      fd.append('file', new File([mediaBlobRef.current], `answer-${QUESTIONS[index].id}.webm`, { type: 'audio/webm' }))
+    
+      fd.append('file', new File([mediaBlobRef.current], `answer-${QUESTIONS_LIST[index].id}.webm`, { type: 'audio/webm' }))
       const res = await fetch(`${apiBase}/api/interview/upload-audio`, { method: 'POST', body: fd })
       if (!res.ok) throw new Error('Upload failed')
       const json: TranscriptResp = await res.json()
-      setTranscripts(prev => ({ ...prev, [QUESTIONS[index].id]: json.transcript }))
-      if (index < QUESTIONS.length - 1) setIndex(index + 1)
+     
+      setTranscripts(prev => ({ ...prev, [QUESTIONS_LIST[index].id]: json.transcript }))
+     
+      if (index < QUESTIONS_LIST.length - 1) setIndex(index + 1)
       else setDone(true)
     } catch (e) {
       alert('Audio upload failed')
@@ -67,29 +70,33 @@ export default function InterviewRoom() {
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Interview Room</h2>
+    
+    <div className="space-y-6 interview-container max-w-4xl mx-auto p-4">
+      <h2 className="text-2xl font-semibold interview-header">Interview Room</h2>
       {!applicantId && <p className="text-red-600">Missing applicantId in URL (?applicantId=...)</p>}
 
-      <div className="space-y-3">
-        <BotBubble text={QUESTIONS[index]?.text || 'All questions completed.'} loading={speaking} />
+      <div className="space-y-3 interview-interaction-area">
+        
+        <BotBubble text={QUESTIONS_LIST[index]?.text || 'All questions completed.'} loading={speaking} />
         <VideoRecorder onAudioReady={handleUploadAudio} />
         <button
           onClick={submitAnswer}
           disabled={uploading || !mediaBlobRef.current || done}
-          className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
+          
+          className="bg-black text-white rounded px-4 py-2 disabled:opacity-50 submit-button"
         >
           {uploading ? 'Uploading…' : done ? 'Finished' : 'Submit Answer'}
         </button>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 interview-transcripts-section">
         <h3 className="text-lg font-medium mb-2">Transcripts</h3>
         <ul className="space-y-2">
-          {QUESTIONS.map(q => (
-            <li key={q.id} className="border rounded p-3">
-              <div className="font-medium mb-1">{q.text}</div>
-              <div className="text-sm text-gray-700 whitespace-pre-wrap">
+        
+          {QUESTIONS_LIST.map(q => (
+            <li key={q.id} className="border rounded p-3 transcript-item">
+              <div className="font-medium mb-1 transcript-question-text">{q.text}</div>
+              <div className="text-sm text-gray-700 whitespace-pre-wrap transcript-answer-text">
                 {transcripts[q.id] || <em>Pending…</em>}
               </div>
             </li>
