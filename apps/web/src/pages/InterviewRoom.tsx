@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react'
 import BotBubble from '../components/BotBubble'
 import VideoRecorder from '../components/VideoRecorder'
@@ -16,10 +17,10 @@ export default function InterviewRoom() {
   const [applicantId, setApplicantId] = useState('')
   const [index, setIndex] = useState(0)
   const [speaking, setSpeaking] = useState(false)
-  const [transcripts, setTranscripts] = useState<Record<string, string>>({})
+  const [transcripts, setTranscripts] = useState < Record < string, string>> ({})
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
-  const mediaBlobRef = useRef<Blob | null>(null)
+  const mediaBlobRef = useRef < Blob | null > (null)
 
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('applicantId') || ''
